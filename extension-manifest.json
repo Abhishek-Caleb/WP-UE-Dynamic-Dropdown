@@ -1,0 +1,12 @@
+{
+  "name": "Test Custom renderer",
+  "id": "test-custom-renderer",
+  "description": "Dynamic Drop down",
+  "version": "0.0.1",
+  "customRenderers": [
+    {
+      "dataType": "component",
+      "url": "/#/renderer/component"
+    }
+  ]
+}
