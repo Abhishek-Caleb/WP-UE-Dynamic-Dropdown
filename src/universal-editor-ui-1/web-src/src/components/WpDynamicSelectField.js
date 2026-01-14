@@ -1,10 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect } from 'react'
 import { attach } from "@adobe/uix-guest"
 import {
   Provider,
   defaultTheme,
   View,
-  Flex,
   ComboBox, Item
 } from '@adobe/react-spectrum'
 
@@ -16,33 +15,21 @@ export default function WpDynamicSelectField () {
   const [folders, setFolders] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const FOLDERS_QUERY = "/bin/querybuilder.json?" +
-                            "path=/content/dam" +
-                            "&type=sling:Folder" +
-                            "&property=hidden" +
-                            "&property.operation=not" +
-                            "&path.flat=true" +
-                            "&p.limit=10"
+  // Hard-coded JSON data to avoid querying AEM while testing.
+  // You can change these values freely.
+  const MOCK_FOLDERS = [
+    { path: "/content/dam", title: "DAM Root" },
+    { path: "/content/dam/we-retail", title: "We.Retail" },
+    { path: "/content/dam/we-retail/en", title: "We.Retail (EN)" },
+    { path: "/content/dam/projects", title: "Projects" },
+    { path: "/content/dam/projects/demo", title: "Demo" }
+  ];
 
-  const fetchRootFolders = async (AEM_HOST, connection) => {
-    const foldersQueryUrl = `${AEM_HOST}${FOLDERS_QUERY}`;       
-    const requestOptions = {
-      headers: {
-        'Authorization': `Bearer ${connection.sharedContext.get("token")}`
-      }
-    };
-    const response = await fetch(foldersQueryUrl, requestOptions)
-    const folderList = (await response.json()).hits?.map(hit => ({
-            path: hit.path,
-            title: hit.title
-        })) || [];
-
-    return (folderList);
+  // Simulate an async fetch so you can test loading + timing.
+  const fetchRootFolders = async () => {
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    return MOCK_FOLDERS;
   };
-
-  const getAemHost = (editorState) => {
-    return editorState.connections.aemconnection.substring(editorState.connections.aemconnection.indexOf('xwalk:') + 6);
-  }
 
   useEffect(() => {
     (async () => {
@@ -51,19 +38,15 @@ export default function WpDynamicSelectField () {
 
       const model = await connection.host.field.getModel();
       console.log("Dropdown model.name----------->", model.name);
-      
+
       setValue(await connection.host.field.getValue() || '');
 
-      const editorState = await connection.host.editorState.get();
+      // Use mocked data instead of querying AEM.
+      const folderList = await fetchRootFolders();
+      setFolders(folderList);
+      setLoading(false);
 
-      if(editorState){
-        const folderList = await fetchRootFolders(getAemHost(editorState), connection);
-
-        setFolders(folderList);
-        setLoading(false);
-
-        document.body.style.height = '200px';
-      }
+      document.body.style.height = '200px';
     })()
   }, [])
 
